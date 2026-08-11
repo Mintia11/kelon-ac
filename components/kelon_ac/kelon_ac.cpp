@@ -208,13 +208,15 @@ void KelonAcClimate::transmit_kelon_() {
 
 void KelonAcClimate::transmit_kelon168_() {
   if (this->first_transmit_) {
-    for (uint8_t i = 2; i < KELON168_STATE_LENGTH; i++) this->kelon168_state_.raw[i] = 0;
-    this->kelon168_state_.raw[0] = 0x83;
-    this->kelon168_state_.raw[1] = 0x06;
-    this->kelon168_state_.raw[6] = 0x80;
-    this->kelon168_state_.Model1 = 0b1000;
-    this->kelon168_state_.Model2 = 0b001;
+    for (uint8_t i = 0; i < KELON168_STATE_LENGTH; i++) this->kelon168_state_.raw[i] = 0;
   }
+
+  // Set fixed header/model default bits per transmission (reference stateReset)
+  this->kelon168_state_.raw[0] = 0x83;
+  this->kelon168_state_.raw[1] = 0x06;
+  this->kelon168_state_.raw[6] |= 0x80; // Clock / Light default bit
+  this->kelon168_state_.Model1 = 0b1000;
+  this->kelon168_state_.Model2 = 0b001;
 
   bool want_on = this->mode != climate::CLIMATE_MODE_OFF;
   bool changed_power = this->first_transmit_ || (want_on != (this->last_mode_ != climate::CLIMATE_MODE_OFF));
@@ -250,9 +252,7 @@ void KelonAcClimate::transmit_kelon168_() {
   uint8_t temp = (uint8_t) clamp<float>(this->target_temperature, KELON168_MIN_TEMP, KELON168_MAX_TEMP);
   this->kelon168_state_.Temp = temp - KELON168_MIN_TEMP;
 
-  // Collapses HA's 4 fan speeds onto Kelon168's Low/Medium/Max levels.
-  // (Kelon168 also has distinct Min and High levels - extend this switch
-  // if you need finer control, e.g. via a separate `select` entity.)
+  // Fan speeds mapped to reference setFan logic
   uint8_t fan_bits, fan2_bit;
   switch (this->fan_mode.value_or(climate::CLIMATE_FAN_AUTO)) {
     case climate::CLIMATE_FAN_LOW:
@@ -279,9 +279,6 @@ void KelonAcClimate::transmit_kelon168_() {
   this->kelon168_state_.Swing1 = swing_on;
   this->kelon168_state_.Swing2 = swing_on;
 
-  // The real remote sets exactly one "Cmd" byte per button press. Since a HA
-  // climate entity can change several fields in a single call, approximate
-  // that by prioritizing whichever field changed since the last transmit.
   uint8_t cmd = KELON168_CMD_MODE;
   if (changed_power)
     cmd = KELON168_CMD_POWER;
@@ -295,15 +292,18 @@ void KelonAcClimate::transmit_kelon168_() {
     cmd = KELON168_CMD_SWING;
   this->kelon168_state_.Cmd = cmd;
 
-  // Checksums - see IRKelon168Ac::checksum().
-  this->kelon168_state_.Sum1 = this->xor_bytes_(this->kelon168_state_.raw + 2, 13 - 1 - 2);
-  this->kelon168_state_.Sum2 = this->xor_bytes_(this->kelon168_state_.raw + 14, 20 - 14);
+  // Checksums matching reference exactly:
+  // Sum1 XORs bytes 2 through 11 (10 bytes total)
+  // Sum2 XORs bytes 14 through 19 (6 bytes total)
+  this->kelon168_state_.Sum1 = this->xor_bytes_(this->kelon168_state_.raw + 2, 10);
+  this->kelon168_state_.Sum2 = this->xor_bytes_(this->kelon168_state_.raw + 14, 6);
 
   std::vector<int32_t> timings;
-  // 3 sections: 6 bytes (48 bits) / 8 bytes (64 bits) / 7 bytes (56 bits).
+  // Section 1 includes Header, Sections 2 & 3 do NOT include Header (matches IRsend::sendKelon168)
   this->append_bytes_(timings, this->kelon168_state_.raw, 6, true, KELON168_FOOTER_SPACE);
   this->append_bytes_(timings, this->kelon168_state_.raw + 6, 8, false, KELON168_FOOTER_SPACE);
   this->append_bytes_(timings, this->kelon168_state_.raw + 14, 7, false, KELON_GAP);
+  
   ir_send_raw(timings.data(), timings.size());
 }
 
