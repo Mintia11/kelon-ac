@@ -16,9 +16,8 @@ PROTOCOLS = {
     "KELON168": KelonProtocolVariant.PROTOCOL_KELON168,
 }
 
-CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(cv.COMPONENT_SCHEMA).extend(
+CONFIG_SCHEMA = climate.climate_schema(KelonAcClimate).extend(cv.COMPONENT_SCHEMA).extend(
     {
-        cv.GenerateID(): cv.declare_id(KelonAcClimate),
         # KELON    = basic 48-bit "ON/OFF 9000-12000" series
         # KELON168 = 168-bit Hisense / DG11R2-01 remote series
         cv.Optional(CONF_PROTOCOL, default="KELON168"): cv.enum(
@@ -26,7 +25,6 @@ CONFIG_SCHEMA = climate.CLIMATE_SCHEMA.extend(cv.COMPONENT_SCHEMA).extend(
         ),
     }
 )
-
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
