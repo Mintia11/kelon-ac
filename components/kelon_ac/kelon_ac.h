@@ -62,6 +62,7 @@ class KelonClimate : public climate::Climate, public Component {
 
  protected:
   void send_command_();
+  void send_command_raw_(KelonProtocol &packet);
   KelonProtocol packet_;
 
   bool was_on_ = false;

@@ -38,9 +38,8 @@ climate::ClimateTraits KelonClimate::traits() {
       climate::CLIMATE_FAN_MEDIUM,
       climate::CLIMATE_FAN_HIGH
   });
-  // Control ranges derived from Ranges.control value [16, 31]
-  traits.set_visual_min_temperature(16.0); 
-  traits.set_visual_max_temperature(31.0); 
+  traits.set_visual_min_temperature(18.0); 
+  traits.set_visual_max_temperature(30.0); 
   traits.set_visual_temperature_step(1.0);
   return traits;
 }
@@ -84,12 +83,16 @@ void KelonClimate::send_command_() {
     this->packet_.Fan = kKelonFanMax;
   }
 
-  this->packet_.Temperature = (uint8_t)this->target_temperature - 18;
+  this->packet_.Temperature = (uint8_t)this->target_temperature - 20;
 
   ESP_LOGD(TAG, "Sending command: mode=%d, fan=%d, temp=%d, power_toggle=%d", this->packet_.Mode, this->packet_.Fan, this->packet_.Temperature, this->packet_.PowerToggle);
 
+  this->send_command_raw_(this->packet_);
+}
+
+void KelonClimate::send_command_raw_(KelonProtocol &packet) {
   int32_t timings[2 + 8 * 12 + 1];
-  int count = encode_kelon_signal((uint8_t*)&this->packet_.raw, 6, timings, sizeof(timings)/sizeof(timings[0]));
+  int count = encode_kelon_signal((uint8_t*)&packet.raw, 6, timings, sizeof(timings)/sizeof(timings[0]));
   if (count < 0) {
     ESP_LOGE(TAG, "Failed to encode Kelon signal");
     return;
