@@ -89,7 +89,7 @@ void KelonClimate::send_command_() {
   ESP_LOGD(TAG, "Sending command: mode=%d, fan=%d, temp=%d, power_toggle=%d", this->packet_.Mode, this->packet_.Fan, this->packet_.Temperature, this->packet_.PowerToggle);
 
   int32_t timings[2 + 8 * 2 * sizeof(KelonProtocol)];
-  int count = encode_kelon_signal((uint8_t*)&this->packet_.raw, sizeof(KelonProtocol), (uint16_t*)timings, sizeof(timings)/sizeof(timings[0]));
+  int count = encode_kelon_signal((uint8_t*)&this->packet_.raw, sizeof(KelonProtocol), timings, sizeof(timings)/sizeof(timings[0]));
   if (count < 0) {
     ESP_LOGE(TAG, "Failed to encode Kelon signal");
     return;
