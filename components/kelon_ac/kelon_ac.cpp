@@ -30,13 +30,15 @@ climate::ClimateTraits KelonClimate::traits() {
       climate::CLIMATE_MODE_HEAT,
       climate::CLIMATE_MODE_COOL,
       climate::CLIMATE_MODE_DRY,
-      climate::CLIMATE_MODE_FAN_ONLY
+      climate::CLIMATE_MODE_FAN_ONLY,
+      climate::CLIMATE_MODE_HEAT_COOL // TODO: Test for turning off the screen
   });
   traits.set_supported_fan_modes({
       climate::CLIMATE_FAN_AUTO,
       climate::CLIMATE_FAN_LOW,
       climate::CLIMATE_FAN_MEDIUM,
-      climate::CLIMATE_FAN_HIGH
+      climate::CLIMATE_FAN_HIGH,
+      climate::CLIMATE_FAN_QUIET // TODO: Map this to a real fan speed
   });
   traits.set_visual_min_temperature(18.0); 
   traits.set_visual_max_temperature(30.0); 
@@ -65,7 +67,7 @@ void KelonClimate::send_command_() {
   
   if (this->mode == climate::CLIMATE_MODE_HEAT) {
     this->packet_.Mode = kKelonModeHeat;
-  } else if (this->mode == climate::CLIMATE_MODE_COOL) {
+  } else if (this->mode == climate::CLIMATE_MODE_COOL || this->mode == climate::CLIMATE_MODE_HEAT_COOL) {
     this->packet_.Mode = kKelonModeCool;
   } else if (this->mode == climate::CLIMATE_MODE_DRY) {
     this->packet_.Mode = kKelonModeDry;
@@ -81,6 +83,11 @@ void KelonClimate::send_command_() {
     this->packet_.Fan = kKelonFanMedium;
   } else if (this->fan_mode == climate::CLIMATE_FAN_HIGH) {
     this->packet_.Fan = kKelonFanMax;
+  }
+
+  if (this->mode == climate::CLIMATE_MODE_HEAT_COOL) {
+    this->packet_.pad1 = 0b1111;
+    this->packet_.pad2 = 0b11;
   }
 
   this->packet_.Temperature = (uint8_t)this->target_temperature - 2;
