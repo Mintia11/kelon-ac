@@ -54,6 +54,8 @@ void KelonClimate::control(const climate::ClimateCall &call) {
   this->send_command_();
 }
 
+int encode_kelon_signal(const uint8_t *data, size_t length, int32_t *timing_out, size_t max_buf_len);
+
 void KelonClimate::send_command_() {
   if ((this->mode == climate::CLIMATE_MODE_OFF && this->was_on_) || (this->mode != climate::CLIMATE_MODE_OFF && !this->was_on_)) {
     this->packet_.PowerToggle = 1;
