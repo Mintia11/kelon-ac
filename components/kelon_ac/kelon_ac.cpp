@@ -84,19 +84,19 @@ void KelonClimate::send_command_() {
     this->packet_.Fan = kKelonFanMax;
   }
 
-  this->packet_.Temperature = (uint8_t)this->target_temperature;
+  this->packet_.Temperature = (uint8_t)this->target_temperature - 18;
 
   ESP_LOGD(TAG, "Sending command: mode=%d, fan=%d, temp=%d, power_toggle=%d", this->packet_.Mode, this->packet_.Fan, this->packet_.Temperature, this->packet_.PowerToggle);
 
-  int32_t timings[2 + 8 * 2 * sizeof(KelonProtocol)];
-  int count = encode_kelon_signal((uint8_t*)&this->packet_.raw, sizeof(KelonProtocol), timings, sizeof(timings)/sizeof(timings[0]));
+  int32_t timings[2 + 8 * 12 + 1];
+  int count = encode_kelon_signal((uint8_t*)&this->packet_.raw, 6, timings, sizeof(timings)/sizeof(timings[0]));
   if (count < 0) {
     ESP_LOGE(TAG, "Failed to encode Kelon signal");
     return;
   }
 
   // dump the timings for debugging
-  ESP_LOGD(TAG, "Kelon signal timings:");
+  ESP_LOGD(TAG, "Kelon signal timings %d:", count);
   for (int i = 0; i < count; i++) {
     ESP_LOGD(TAG, "timings[%d] = %d", i, timings[i]);
   }
@@ -106,7 +106,7 @@ void KelonClimate::send_command_() {
 }
 
 int encode_kelon_signal(const uint8_t *data, size_t length, int32_t *timing_out, size_t max_buf_len) {
-  size_t required_len = 2 + (length * 8 * 2);
+  size_t required_len = 2 + (length * 8 * 2) + 1;
 
   if (max_buf_len < required_len) {
     return -1;
@@ -129,6 +129,8 @@ int encode_kelon_signal(const uint8_t *data, size_t length, int32_t *timing_out,
       }
     }
   }
+
+  timing_out[idx++] = kKelonBitMark; // footer mark
 
   return (int)idx;
 }
