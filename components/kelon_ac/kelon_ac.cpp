@@ -107,7 +107,7 @@ void KelonClimate::send_command_raw_(KelonProtocol &packet) {
   int count = encode_kelon_signal((uint8_t*)&packet.raw, 6, 
     timings, sizeof(timings)/sizeof(timings[0]), 
     true, false, 
-    true,
+    true
   );
   if (count < 0) {
     ESP_LOGE(TAG, "Failed to encode Kelon signal");
@@ -116,7 +116,7 @@ void KelonClimate::send_command_raw_(KelonProtocol &packet) {
   int count2 = encode_kelon_signal((uint8_t*)&this->second_part_, 6, 
     timings + count, sizeof(timings)/sizeof(timings[0]) - count, 
       false, true, 
-    false,
+    false
   );
   if (count2 < 0) {
     ESP_LOGE(TAG, "Failed to encode Kelon second part signal");
