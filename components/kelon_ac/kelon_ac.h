@@ -53,7 +53,7 @@ const int32_t kKelonOneSpace = -1680;
 const int32_t kKelonZeroSpace = -600;
 const uint32_t kKelonGap = 200000;
 const uint16_t kKelonFreq = 38000;
-const int32_t kKelonInterHeaderMark = 7850;
+const int32_t kKelonInterHeaderSpace = 7850;
 
 class KelonClimate : public climate::Climate, public Component {
  public:

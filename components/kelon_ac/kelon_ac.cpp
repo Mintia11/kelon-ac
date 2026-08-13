@@ -59,7 +59,7 @@ void KelonClimate::control(const climate::ClimateCall &call) {
 int encode_kelon_signal(const uint8_t *data, size_t length, 
   int32_t *timing_out, size_t max_buf_len, 
   bool has_header, bool has_footer, 
-  bool inter_header, bool invert_bits
+  bool inter_header,
 );
 
 void KelonClimate::send_command_() {
@@ -95,7 +95,7 @@ void KelonClimate::send_command_() {
     this->second_part_ = 0b000000111000000000000000000000000000000000000010;
   }
 
-  this->packet_.Temperature = (uint8_t)this->target_temperature - 2;
+  this->packet_.Temperature = (uint8_t)this->target_temperature;
 
   ESP_LOGD(TAG, "Sending command: mode=%d, fan=%d, temp=%d, power_toggle=%d", this->packet_.Mode, this->packet_.Fan, this->packet_.Temperature, this->packet_.PowerToggle);
 
@@ -107,7 +107,7 @@ void KelonClimate::send_command_raw_(KelonProtocol &packet) {
   int count = encode_kelon_signal((uint8_t*)&packet.raw, 6, 
     timings, sizeof(timings)/sizeof(timings[0]), 
     true, false, 
-    true, false
+    true,
   );
   if (count < 0) {
     ESP_LOGE(TAG, "Failed to encode Kelon signal");
@@ -116,7 +116,7 @@ void KelonClimate::send_command_raw_(KelonProtocol &packet) {
   int count2 = encode_kelon_signal((uint8_t*)&this->second_part_, 6, 
     timings + count, sizeof(timings)/sizeof(timings[0]) - count, 
       false, true, 
-    false, true
+    false,
   );
   if (count2 < 0) {
     ESP_LOGE(TAG, "Failed to encode Kelon second part signal");
@@ -144,7 +144,7 @@ void KelonClimate::send_command_raw_(KelonProtocol &packet) {
 int encode_kelon_signal(const uint8_t *data, size_t length, 
   int32_t *timing_out, size_t max_buf_len, 
   bool has_header, bool has_footer, 
-  bool inter_header, bool invert_marks
+  bool inter_header
 ) {
   size_t required_len = 0;
   if (has_header) {
@@ -155,7 +155,7 @@ int encode_kelon_signal(const uint8_t *data, size_t length,
     required_len += 1; // footer mark
   }
   if (inter_header) {
-    required_len += 1; // inter-header mark
+    required_len += 2; // inter-header space
   }
 
   if (max_buf_len < required_len) {
@@ -173,18 +173,10 @@ int encode_kelon_signal(const uint8_t *data, size_t length,
     uint8_t byte = data[b];
     for (int i = 0; i < 8; i++) {
       timing_out[idx++] = kKelonBitMark;
-      if (invert_marks) {
-        timing_out[idx - 1] = -timing_out[idx - 1];
-      }
-        
       if (byte & (1 << i)) {
         timing_out[idx++] = kKelonOneSpace;
       } else {
         timing_out[idx++] = kKelonZeroSpace;
-      }
-
-      if (invert_marks) {
-        timing_out[idx - 1] = -timing_out[idx - 1];
       }
     }
   }
@@ -193,12 +185,9 @@ int encode_kelon_signal(const uint8_t *data, size_t length,
     timing_out[idx++] = kKelonBitMark; // footer mark
   }
 
-  if (invert_marks) {
-    timing_out[idx - 1] = -timing_out[idx - 1];
-  }
-
   if (inter_header) {
-    timing_out[idx++] = kKelonInterHeaderMark;
+    timing_out[idx++] = kKelonBitMark;
+    timing_out[idx++] = kKelonInterHeaderSpace;
   }
 
   return (int)idx;
