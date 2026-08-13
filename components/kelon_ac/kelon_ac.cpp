@@ -193,6 +193,10 @@ int encode_kelon_signal(const uint8_t *data, size_t length,
     timing_out[idx++] = kKelonBitMark; // footer mark
   }
 
+  if (invert_marks) {
+    timing_out[idx - 1] = -timing_out[idx - 1];
+  }
+
   if (inter_header) {
     timing_out[idx++] = kKelonInterHeaderMark;
   }
