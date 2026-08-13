@@ -127,11 +127,15 @@ void KelonClimate::send_command_raw_(KelonProtocol &packet) {
 
   // dump the timings for debugging
   ESP_LOGD(TAG, "Kelon signal timings %d:", total_count);
-  std::string timing_str;
+  // split into lines of 10 using a string as buffer
+  std::string line;
   for (int i = 0; i < total_count; i++) {
-    timing_str += std::to_string(timings[i]) + " ";
+    line += std::to_string(timings[i]) + ", ";
+    if ((i + 1) % 10 == 0 || i == total_count - 1) {
+      ESP_LOGD(TAG, "%s", line.c_str());
+      line.clear();
+    }
   }
-  ESP_LOGD(TAG, "Timings: %s", timing_str.c_str());
 
   ir_send_raw(timings, total_count);
   delayMicroseconds(kKelonGap);
