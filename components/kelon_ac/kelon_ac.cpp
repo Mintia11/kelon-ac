@@ -1,6 +1,7 @@
 #include "kelon_ac.h"
 #include "esphome/core/log.h"
 #include <vector>
+#include <string>
 
 namespace esphome {
 namespace kelon_ac {
@@ -126,9 +127,11 @@ void KelonClimate::send_command_raw_(KelonProtocol &packet) {
 
   // dump the timings for debugging
   ESP_LOGD(TAG, "Kelon signal timings %d:", total_count);
+  std::string timing_str;
   for (int i = 0; i < total_count; i++) {
-    ESP_LOGD(TAG, "timings[%d] = %d", i, timings[i]);
+    timing_str += std::to_string(timings[i]) + " ";
   }
+  ESP_LOGD(TAG, "Timings: %s", timing_str.c_str());
 
   ir_send_raw(timings, total_count);
   delayMicroseconds(kKelonGap);
