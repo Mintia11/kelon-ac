@@ -139,7 +139,17 @@ int encode_kelon_signal(const uint8_t *data, size_t length,
   bool has_header, bool has_footer, 
   bool inter_header, bool invert_marks
 ) {
-  size_t required_len = 2 + (length * 8 * 2) + 1;
+  size_t required_len = 0;
+  if (has_header) {
+    required_len += 2; // header mark and space
+  }
+  required_len += length * 8 * 2; // each bit has a mark and a space
+  if (has_footer) {
+    required_len += 1; // footer mark
+  }
+  if (inter_header) {
+    required_len += 1; // inter-header mark
+  }
 
   if (max_buf_len < required_len) {
     return -1;
