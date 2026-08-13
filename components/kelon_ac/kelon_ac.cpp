@@ -20,6 +20,7 @@ void KelonClimate::setup() {
   this->packet_.raw = 0;
   this->packet_.preamble[0] = 0b10000011;
   this->packet_.preamble[1] = 0b00000110;
+  this->second_part_ = 0; // Reset second part for each command
 }
 
 climate::ClimateTraits KelonClimate::traits() {
@@ -61,6 +62,8 @@ int encode_kelon_signal(const uint8_t *data, size_t length,
 );
 
 void KelonClimate::send_command_() {
+  this->second_part_ = 0; // Reset second part for each command
+
   if ((this->mode == climate::CLIMATE_MODE_OFF && this->was_on_) || (this->mode != climate::CLIMATE_MODE_OFF && !this->was_on_)) {
     this->packet_.PowerToggle = 1;
     this->was_on_ = !this->was_on_;
