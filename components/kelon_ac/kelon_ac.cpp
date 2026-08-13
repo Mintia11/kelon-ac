@@ -59,7 +59,7 @@ void KelonClimate::control(const climate::ClimateCall &call) {
 int encode_kelon_signal(const uint8_t *data, size_t length, 
   int32_t *timing_out, size_t max_buf_len, 
   bool has_header, bool has_footer, 
-  bool inter_header,
+  bool inter_header
 );
 
 void KelonClimate::send_command_() {
