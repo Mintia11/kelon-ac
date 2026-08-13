@@ -92,7 +92,7 @@ void KelonClimate::send_command_() {
     this->packet_.Fan = kKelonFanMax;
   } else if (this->fan_mode == climate::CLIMATE_FAN_QUIET) {
     this->packet_.Fan = kKelonFanMin;
-    this->second_part_ = 0b000000111000000000000000000000000000000000000010;
+    this->second_part_ = 0b010000000000000000000000000000000000000111000000;
   }
 
   this->packet_.Temperature = (uint8_t)this->target_temperature;
@@ -108,10 +108,10 @@ void KelonClimate::send_command_raw_(KelonProtocol &packet) {
   // mark+space inter-header (2)
   // mark+space for each bit (8 bits * 12 bytes = 96 bits)
   // mark footer 1
-  int32_t timings[2 + 8 * 12 + 2 + 8 * 12 + 2];
+  int32_t timings[2 + 8 * 12 + 2 + 8 * 12 + 1];
   int count = encode_kelon_signal((uint8_t*)&packet.raw, 6, 
     timings, sizeof(timings)/sizeof(timings[0]), 
-    true, false, 
+    true, true, 
     true
   );
   if (count < 0) {
@@ -152,15 +152,13 @@ int encode_kelon_signal(const uint8_t *data, size_t length,
   bool inter_header
 ) {
   size_t required_len = 0;
-  if (has_header) {
-    required_len += 2; // header mark and space
-  }
+  required_len += 2; // header mark and space
   required_len += length * 8 * 2; // each bit has a mark and a space
   if (has_footer) {
     required_len += 1; // footer mark
   }
   if (inter_header) {
-    required_len += 2; // inter-header space
+    required_len += 1; // inter-header space
   }
 
   if (max_buf_len < required_len) {
@@ -172,6 +170,9 @@ int encode_kelon_signal(const uint8_t *data, size_t length,
   if (has_header) {
     timing_out[idx++] = kKelonHdrMark;
     timing_out[idx++] = kKelonHdrSpace;
+  } else {
+    timing_out[idx++] = kKelonBitMark;
+    timing_out[idx++] = kKelonOneSpace;
   }
 
   for (size_t b = 0; b < length; b++) {
@@ -191,7 +192,6 @@ int encode_kelon_signal(const uint8_t *data, size_t length,
   }
 
   if (inter_header) {
-    timing_out[idx++] = kKelonBitMark;
     timing_out[idx++] = kKelonInterHeaderSpace;
   }
 
