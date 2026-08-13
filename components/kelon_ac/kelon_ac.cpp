@@ -106,21 +106,6 @@ void KelonClimate::send_command_raw_(KelonProtocol &packet) {
   }
 
   ir_send_raw(timings, count);
-  int32_t timings_2[] = {700, 1550, 700, 1550, 700, 450, 700, 400, 
-700, 450, 700, 450, 700, 450, 700, 1550, 700, 450, 
-650, 1550, 700, 1600, 700, 400, 700, 450, 700, 450, 
-700, 450, 700, 400, 700, 1550, 700, 1550, 700, 450, 
-700, 450, 700, 450, 650, 450, 700, 450, 700, 450, 
-700, 400, 700, 1550, 700, 450, 700, 450, 700, 1550, 
-700, 450, 700, 450, 700, 1550, 700, 400, 700, 450, 
-700, 400, 700, 450, 700, 450, 700, 450, 700, 450, 
-700, 400, 700, 450, 700, 450, 650, 450, 700, 450, 
-700, 450, 700, 400, 700, 450, 700, 450, 700, 600};
-for (int i = 1; i < sizeof(timings_2)/sizeof(timings_2[0]); i+=2) {
-  timings_2[i] = -timings_2[i];
-  }
-
-  ir_send_raw(timings_2, sizeof(timings_2)/sizeof(timings_2[0]));
   delayMicroseconds(kKelonGap);
 }
 
@@ -149,8 +134,8 @@ int encode_kelon_signal(const uint8_t *data, size_t length, int32_t *timing_out,
     }
   }
 
-  // timing_out[idx++] = kKelonBitMark; // footer mark
-  timing_out[idx++] = 7850; // inter-header mark
+  timing_out[idx++] = kKelonBitMark; // footer mark
+  // timing_out[idx++] = 7850; // inter-header mark
 
   return (int)idx;
 }
