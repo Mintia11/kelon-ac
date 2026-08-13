@@ -91,7 +91,7 @@ void KelonClimate::send_command_() {
     this->packet_.Fan = kKelonFanMax;
   } else if (this->fan_mode == climate::CLIMATE_FAN_QUIET) {
     this->packet_.Fan = kKelonFanMin;
-    this->second_part = 0b000000111000000000000000000000000000000000000010;
+    this->second_part_ = 0b000000111000000000000000000000000000000000000010;
   }
 
   this->packet_.Temperature = (uint8_t)this->target_temperature;
