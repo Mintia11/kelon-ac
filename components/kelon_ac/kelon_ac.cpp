@@ -95,7 +95,7 @@ void KelonClimate::send_command_() {
     this->second_part_ = 0b000000111000000000000000000000000000000000000010;
   }
 
-  this->packet_.Temperature = (uint8_t)this->target_temperature;
+  this->packet_.Temperature = (uint8_t)this->target_temperature - 2;
 
   ESP_LOGD(TAG, "Sending command: mode=%d, fan=%d, temp=%d, power_toggle=%d", this->packet_.Mode, this->packet_.Fan, this->packet_.Temperature, this->packet_.PowerToggle);
 
