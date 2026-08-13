@@ -103,7 +103,12 @@ void KelonClimate::send_command_() {
 }
 
 void KelonClimate::send_command_raw_(KelonProtocol &packet) {
-  int32_t timings[2 + 8 * 12 + 1 + 8 * 12 + 1];
+  // mark+space header 2
+  // mark+space for each bit (8 bits * 12 bytes = 96 bits)
+  // mark+space inter-header (2)
+  // mark+space for each bit (8 bits * 12 bytes = 96 bits)
+  // mark footer 1
+  int32_t timings[2 + 8 * 12 + 2 + 8 * 12 + 2];
   int count = encode_kelon_signal((uint8_t*)&packet.raw, 6, 
     timings, sizeof(timings)/sizeof(timings[0]), 
     true, false, 
